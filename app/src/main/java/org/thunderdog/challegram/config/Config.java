@@ -331,4 +331,8 @@ public class Config {
   public static final boolean ENABLE_TEXT_ANIMATIONS = false;
 
   public static final boolean COMPILE_CHECK = false /*never set to true*/;
+
+  // Whitelist restriction: allow only messages from a single user chat. 0 disables restriction.
+  // Specify Telegram user id (not username). Example: 123456789L
+  public static final long ALLOWED_USER_ID = 0L;
 }

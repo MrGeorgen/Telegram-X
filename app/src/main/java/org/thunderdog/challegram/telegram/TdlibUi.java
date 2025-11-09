@@ -2083,6 +2083,16 @@ public class TdlibUi extends Handler {
 
     final UrlOpenParameters urlOpenParameters = params != null ? params.urlOpenParameters : null;
 
+    // Enforce whitelist restriction: only allow chat with configured ALLOWED_USER_ID
+    if (org.thunderdog.challegram.config.Config.ALLOWED_USER_ID != 0) {
+      long allowedChatId = tgx.td.ChatId.fromUserId(org.thunderdog.challegram.config.Config.ALLOWED_USER_ID);
+      if (chat.id != allowedChatId) {
+        showAccessError(context, urlOpenParameters, Tdlib.CHAT_ACCESS_FAIL, tdlib.isChannel(chat.id));
+        if (params != null) params.onDone();
+        return;
+      }
+    }
+
     int accessState = tdlib.chatAccessState(chat);
     if (accessState < Tdlib.CHAT_ACCESS_OK) {
       if (params != null && params.inviteLinkInfo != null && params.inviteLinkInfo.createsJoinRequest) {

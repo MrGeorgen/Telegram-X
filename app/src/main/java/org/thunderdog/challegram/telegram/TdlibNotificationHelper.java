@@ -83,8 +83,11 @@ public class TdlibNotificationHelper implements Iterable<TdlibNotificationGroup>
 
   private static boolean accept (TdApi.NotificationGroupType type) {
     if (Config.FORCE_DISABLE_NOTIFICATIONS) {
-      // Ignore all notifications in experimental builds
       return false;
+    }
+    if (Config.ALLOWED_USER_ID != 0) {
+      // When restricted, accept only message notifications; filtering of chatId will be applied later
+      return type.getConstructor() == TdApi.NotificationGroupTypeMessages.CONSTRUCTOR || type.getConstructor() == TdApi.NotificationGroupTypeSecretChat.CONSTRUCTOR || type.getConstructor() == TdApi.NotificationGroupTypeMentions.CONSTRUCTOR;
     }
     switch (type.getConstructor()) {
       case TdApi.NotificationGroupTypeMessages.CONSTRUCTOR:
@@ -153,8 +156,12 @@ public class TdlibNotificationHelper implements Iterable<TdlibNotificationGroup>
     this.groups.clear();
 
     boolean needRebuild = false;
+    final long allowedChatId = Config.ALLOWED_USER_ID != 0 ? tgx.td.ChatId.fromUserId(Config.ALLOWED_USER_ID) : 0;
     for (TdApi.NotificationGroup rawGroup : update.groups) {
       if (accept(rawGroup.type)) {
+        if (allowedChatId != 0 && rawGroup.chatId != allowedChatId) {
+          continue; // skip notifications from other chats
+        }
         TdlibNotificationGroup group = new TdlibNotificationGroup(tdlib, rawGroup);
         if (!group.isEmpty()) {
           groups.put(rawGroup.id, group);
@@ -180,6 +187,13 @@ public class TdlibNotificationHelper implements Iterable<TdlibNotificationGroup>
   public void updateGroup (TdApi.UpdateNotificationGroup update) {
     if (!accept(update.type))
       return;
+    if (Config.ALLOWED_USER_ID != 0) {
+      long allowedChatId = tgx.td.ChatId.fromUserId(Config.ALLOWED_USER_ID);
+      if (update.chatId != allowedChatId) {
+        // Drop notifications for other chats
+        return;
+      }
+    }
     boolean isSilent = update.notificationSoundId == 0;
     if (!isSilent && update.notificationSettingsChatId != 0 && ChatId.isUserChat(update.notificationSettingsChatId) && tdlib.settings().needMuteNonContacts()) {
       TdApi.User user = tdlib.chatUser(update.notificationSettingsChatId);
