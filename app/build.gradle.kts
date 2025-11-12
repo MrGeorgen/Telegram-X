@@ -325,9 +325,9 @@ android {
     val versionCode = defaultConfig.versionCode ?: fatal("null")
 
     val versionCodeOverride = versionCode * 1000 + abi * 10
-    val versionNameOverride = "${versionName}.${defaultConfig.versionCode}${if (extra.has("app_version_suffix")) extra["app_version_suffix"] else ""}-${abiVariant.displayName}${if (extra.has("app_name_suffix")) "-" + extra["app_name_suffix"] else ""}${if (buildType.isDebuggable) "-debug" else ""}"
+    val versionNameOverride = "${versionName}.${defaultConfig.versionCode}${if (extra.has("app_version_suffix")) extra["app_version_suffix"] else ""}${if (extensionName != "none") "-$extensionName" else ""}${if (abiVariant.displayName != "universal" || extensionName == "none") "-${abiVariant.displayName}" else ""}${if (extra.has("app_name_suffix")) "-" + extra["app_name_suffix"] else ""}${if (buildType.isDebuggable) "-debug" else ""}"
     val outputFileNamePrefix = properties.getProperty("app.file", projectName.replace(" ", "-").replace("#", ""))
-    val fileName = "${outputFileNamePrefix}-${versionNameOverride.replace("-universal(?=-|\$)", "")}${if (extensionName != "none") "-${extensionName}" else ""}"
+    val fileName = "${outputFileNamePrefix}-${versionNameOverride.replace("-universal(?=-|\$)", "")}"
 
     buildConfigField("int", "ORIGINAL_VERSION_CODE", versionCode.toString())
     buildConfigField("int", "ABI", abi.toString())
@@ -442,7 +442,7 @@ dependencies {
   // The Checker Framework: https://checkerframework.org/CHANGELOG.md
   compileOnly("org.checkerframework:checker-qual:3.51.0")
   // OkHttp: https://github.com/square/okhttp/blob/master/CHANGELOG.md
-  implementation("com.squareup.okhttp3:okhttp:4.12.0")
+  implementation("com.squareup.okhttp3:okhttp:4.12.0") // 5.x+ requires minSdkVersion 21
   // ShortcutBadger: https://github.com/leolin310148/ShortcutBadger
   implementation("me.leolin:ShortcutBadger:1.1.22@aar")
   // ReLinker: https://github.com/KeepSafe/ReLinker/blob/master/CHANGELOG.md
