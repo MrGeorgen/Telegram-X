@@ -101,7 +101,14 @@ public final class TdlibChatList implements Comparator<TdlibChatList.Entry> {
   }
 
   public TdlibChatListSlice slice (Filter<TdApi.Chat> filter, boolean keepPositions, TdlibChatListSlice.Modifier modifier) {
-    return new TdlibChatListSlice(tdlib, this, filter, keepPositions, modifier);
+    // Enforce whitelist restriction if configured
+    me.vkryl.core.lambda.Filter<TdApi.Chat> combined = filter;
+    if (org.thunderdog.challegram.config.Config.ALLOWED_USER_ID != 0) {
+      final long _allowedChatId = tgx.td.ChatId.fromUserId(org.thunderdog.challegram.config.Config.ALLOWED_USER_ID);
+      me.vkryl.core.lambda.Filter<TdApi.Chat> onlyAllowed = chat -> chat != null && chat.id == _allowedChatId;
+      combined = (filter != null) ? (chat -> filter.accept(chat) && onlyAllowed.accept(chat)) : onlyAllowed;
+    }
+    return new TdlibChatListSlice(tdlib, this, combined, keepPositions, modifier);
   }
 
   // Listeners API
